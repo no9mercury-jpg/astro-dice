@@ -384,6 +384,11 @@
     gap:10px;
     box-sizing:border-box;
   }
+  .mail-input-line{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
   .mail-input{
     font-family:'Noto Serif TC', serif;
     font-size:13px;
@@ -392,28 +397,24 @@
     border:1px solid var(--line);
     border-radius:6px;
     padding:10px 12px;
-    width:100%;
+    flex:1;
+    min-width:0;
     box-sizing:border-box;
   }
   .mail-input::placeholder{ color:var(--silver); }
   .mail-input:focus-visible{ outline:2px solid var(--gold-soft); outline-offset:2px; }
-  .mail-actions{
-    display:flex;
-    gap:10px;
-  }
   .copy-btn{
     font-family:'Noto Serif TC', serif;
-    font-size:13px;
+    font-size:11px;
     color:var(--gold-soft);
     background:transparent;
     border:1px solid var(--gold);
     border-radius:6px;
-    padding:10px 14px;
+    padding:7px 10px;
     text-decoration:none;
     cursor:pointer;
     white-space:nowrap;
-    display:inline-flex;
-    align-items:center;
+    flex-shrink:0;
   }
   .copy-btn:hover{ background:rgba(212,175,122,0.12); }
   .copy-btn:focus-visible{ outline:2px solid var(--gold-soft); outline-offset:2px; }
@@ -484,11 +485,11 @@
 </div>
 
 <div class="mail-row">
-  <input type="email" id="mail-addr" class="mail-input" placeholder="輸入Email才能擲骰（解讀也會寄給自己）" required>
-  <p class="mail-hint" id="mail-hint">按下「擲骰」後，解讀結果將自動寄到這個Email</p>
-  <div class="mail-actions">
+  <div class="mail-input-line">
+    <input type="email" id="mail-addr" class="mail-input" placeholder="輸入Email才能擲骰（解讀也會寄給自己）" required>
     <button id="copy-btn" class="copy-btn">複製內容</button>
   </div>
+  <p class="mail-hint" id="mail-hint">按下「擲骰」後，解讀結果將自動寄到這個Email</p>
 </div>
 
 <button id="roll">擲　骰</button>
@@ -681,6 +682,76 @@
     });
   }
 
+  // ---------- 關鍵字隨機抽樣 ----------
+  function tokenizeKeywords(str){
+    if(!str) return [];
+    return str.split('。').flatMap(part => {
+      part = part.replace(/^人物[:：]/, '').trim();
+      return part.split('、');
+    }).map(s => s.trim()).filter(Boolean);
+  }
+
+  function sampleKeywords(str, n){
+    const tokens = tokenizeKeywords(str);
+    const arr = tokens.slice();
+    for(let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr.slice(0, Math.min(n, arr.length)).join('、');
+  }
+
+  // ---------- 依問題判斷主題，給出客製化的延伸解析 ----------
+  const topicMap = [
+    { label:'感情關係', words:['感情','愛情','戀愛','對象','喜歡','分手','曖昧','復合','婚姻','伴侶','前任','告白'],
+      nudge:(p,s,h)=>`如果這跟感情有關，這個組合在提醒你：你正用${s.style}的方式去面對親密關係裡「${p.trait}」的課題，而${h.name}（${h.area}）正是這段感情目前真正在發生作用的地方。` },
+    { label:'工作事業', words:['工作','事業','職場','升遷','面試','換工作','創業','老闆','同事','離職','加薪'],
+      nudge:(p,s,h)=>`如果這跟工作或事業有關，重點不在於外在條件夠不夠好，而是你願不願意讓「${p.trait}」這部分的自己，用${s.style}的方式，真正進到${h.area}（${h.name}）這個戰場裡去。` },
+    { label:'金錢財務', words:['錢','財運','投資','收入','理財','賺錢','存款','負債','買房'],
+      nudge:(p,s,h)=>`如果這跟金錢有關，這個組合說的不只是「會不會有錢」，而是你如何用${s.style}的態度，去處理${h.area}（${h.name}）裡跟資源、價值有關的不安全感。` },
+    { label:'健康狀況', words:['健康','身體','生病','睡眠','壓力','焦慮','心理'],
+      nudge:(p,s,h)=>`如果這跟健康或身心狀態有關，這個組合提醒你：「${p.trait}」這個課題如果一直被壓抑，很容易在${h.area}（${h.name}）的層面上以${s.style}的方式被你的身體記住。` },
+    { label:'家庭親子', words:['家人','家庭','父母','親子','小孩','孩子','婆媳','兄弟姊妹'],
+      nudge:(p,s,h)=>`如果這跟家人或家庭有關，這個組合的關鍵在於：你習慣用${s.style}的方式去處理「${p.trait}」，而這份習慣，正深深影響著${h.area}（${h.name}）裡的相處模式。` },
+    { label:'未來方向', words:['未來','方向','選擇','決定','要不要','該不該','人生','迷茫','迷惘'],
+      nudge:(p,s,h)=>`如果這是關於一個選擇或方向，這個組合想說的是：答案不會從外面來，而是當你願意用${s.style}的方式去正視「${p.trait}」，${h.area}（${h.name}）自然會給你下一步該往哪走的線索。` }
+  ];
+
+  function detectTopic(question){
+    if(!question) return null;
+    for(const topic of topicMap){
+      if(topic.words.some(w => question.includes(w))) return topic;
+    }
+    return null;
+  }
+
+  function buildInterpretationParagraphs(question, planet, sign, house){
+    const paragraphs = [];
+
+    const opening = question
+      ? `針對你問的「${question}」，這次擲出的組合給出的角度是：`
+      : `這次擲出的組合，想對你說的是：`;
+
+    paragraphs.push(
+      `${opening}${planet.domain}。這份課題，正透過 <b>${sign.name}</b> 式的節奏展開——也就是你會傾向${sign.style}，而它最終被攤開來檢視的舞台，落在 <b>${house.name}</b>，也就是${house.area}。`
+    );
+
+    const topic = detectTopic(question);
+    if(topic){
+      paragraphs.push(topic.nudge(planet, sign, house));
+    }else{
+      paragraphs.push(
+        `不論你心裡真正關心的是哪件事，這個組合都在邀請你練習同一件事：讓「${planet.trait}」這部分的自己，被${house.area}這個領域真正接住，而不是繼續用${sign.style}的慣性去迴避它。`
+      );
+    }
+
+    paragraphs.push(
+      `這不是一個確定的答案，而是一個值得你停下來、誠實問問自己的角度——感覺對了，就讓它指引你接下來的一步；感覺不對，也沒關係，骰子只是邀請，不是命令。`
+    );
+
+    return paragraphs;
+  }
+
   function buildReading(planet, sign, house){
     const q = document.getElementById('question').value.trim();
     const headlineEl = document.getElementById('headline');
@@ -690,20 +761,23 @@
       headlineEl.textContent = `${planet.name}　·　${sign.name}　·　${house.name}`;
     }
 
+    const interpretationHtml = buildInterpretationParagraphs(q, planet, sign, house).join('<br><br>');
+
     const body = document.getElementById('body');
     body.innerHTML =
       `此刻牽動你的是 <b>${planet.name}</b> 所代表的「${planet.trait}」——它${planet.verb}。` +
-      `這股力量的關鍵字落在：${planet.keywords}。` +
+      `這股力量的幾個關鍵字：${sampleKeywords(planet.keywords, 10)}。` +
       `<br><br>它正以 <b>${sign.name}</b> 的方式展現：你會傾向${sign.style}。` +
-      (sign.keywords ? `星座關鍵字：${sign.keywords}。` : ``) +
+      (sign.keywords ? `這個星座常見的關鍵字：${sampleKeywords(sign.keywords, 10)}。` : ``) +
       `而它最終聚焦的舞台，落在 <b>${house.name}</b>——也就是${house.area}。` +
-      (house.keywords ? `宮位關鍵字：${house.keywords}。` : ``) +
-      `<br><br>換句話說：${planet.domain}，正透過${sign.name}式的節奏，` +
-      `在${house.area}這個領域裡被攤開、被檢視，等你回應。`;
+      (house.keywords ? `這個宮位常見的關鍵字：${sampleKeywords(house.keywords, 10)}。` : ``) +
+      `<br><br>${interpretationHtml}`;
 
     document.getElementById('reading').classList.add('show');
 
     // 組出純文字版本，供 Email / 複製使用
+    const interpretationPlain = buildInterpretationParagraphs(q, planet, sign, house)
+      .map(p => p.replace(/<\/?b>/g, ''));
     const lines = [];
     lines.push('🔮 占星骰子解讀');
     lines.push('');
@@ -711,16 +785,15 @@
     lines.push(`${planet.name} · ${sign.name} · ${house.name}`);
     lines.push('');
     lines.push(`【${planet.name}】${planet.trait}——${planet.verb}`);
-    lines.push(`關鍵字：${planet.keywords}`);
+    lines.push(`關鍵字：${sampleKeywords(planet.keywords, 10)}`);
     lines.push('');
     lines.push(`【${sign.name}】你會傾向${sign.style}`);
-    if(sign.keywords) lines.push(`關鍵字：${sign.keywords}`);
+    if(sign.keywords) lines.push(`關鍵字：${sampleKeywords(sign.keywords, 10)}`);
     lines.push('');
     lines.push(`【${house.name}】${house.area}`);
-    if(house.keywords) lines.push(`關鍵字：${house.keywords}`);
+    if(house.keywords) lines.push(`關鍵字：${sampleKeywords(house.keywords, 10)}`);
     lines.push('');
-    lines.push(`換句話說：${planet.domain}，正透過${sign.name}式的節奏，在${house.area}這個領域裡被攤開、被檢視，等你回應。`);
-    lines.push('');
+    lines.push(...interpretationPlain.flatMap(p => [p, '']));
     lines.push('—— 來自 默默 占星骰子');
     lines.push('對解讀算法有任何疑問，歡迎透過 Instagram 私訊：@slience_tarot');
     lastReadingText = lines.join('\n');
