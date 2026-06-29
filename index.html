@@ -166,23 +166,36 @@
   .die{
     width:100%;
     max-width:118px;
-    height:140px;
+    height:118px;
     background:linear-gradient(160deg, rgba(74,59,107,0.35), rgba(11,16,38,0.6));
     border:1px solid var(--line);
-    border-radius:6px;
+    border-radius:18px;
     position:relative;
     overflow:hidden;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    box-shadow:0 0 0 1px rgba(212,175,122,0.05), 0 18px 40px -18px rgba(0,0,0,0.6);
+    box-shadow:
+      0 18px 40px -18px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -10px 18px -12px rgba(0,0,0,0.5);
+    transition:transform 0.15s ease;
   }
   .die::before{
     content:'';
     position:absolute; inset:6px;
     border:1px solid rgba(212,175,122,0.15);
-    border-radius:3px;
+    border-radius:12px;
+    pointer-events:none;
+  }
+  .die::after{
+    content:'';
+    position:absolute;
+    top:0; left:0; right:0;
+    height:46%;
+    background:linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0));
+    border-radius:18px 18px 0 0;
     pointer-events:none;
   }
   .die-label{
@@ -194,24 +207,46 @@
     letter-spacing:0.15em;
     text-transform:uppercase;
     color:var(--silver);
+    z-index:1;
   }
   .die-glyph{
-    font-size:26px;
+    width:36px;
+    height:36px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:19px;
     line-height:1;
     color:var(--gold-soft);
+    background:linear-gradient(155deg, rgba(20,25,48,0.7), rgba(7,10,26,0.9));
+    border:1px solid rgba(212,175,122,0.55);
+    border-radius:7px;
+    box-shadow:0 3px 8px -2px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
     margin-bottom:8px;
     transition:transform 0.15s ease;
+    position:relative;
+    z-index:1;
   }
   .die-name{
-    font-size:14px;
+    font-size:13px;
     font-weight:600;
-    letter-spacing:0.04em;
+    letter-spacing:0.03em;
     padding:0 4px;
     text-align:center;
+    position:relative;
+    z-index:1;
+  }
+  .die.rolling{
+    animation:die-shake 0.12s infinite;
   }
   .die.rolling .die-glyph,
   .die.rolling .die-name{
     animation:blur-cycle 0.08s infinite;
+  }
+  @keyframes die-shake{
+    0%{ transform:rotate(0deg); }
+    50%{ transform:rotate(-3deg); }
+    100%{ transform:rotate(3deg); }
   }
   @keyframes blur-cycle{
     0%{filter:blur(0px);}
@@ -391,17 +426,19 @@
   }
   .mail-input{
     font-family:'Noto Serif TC', serif;
-    font-size:13px;
+    font-size:clamp(10px, 2.6vw, 13px);
     color:var(--cream);
     background:rgba(7,10,26,0.4);
     border:1px solid var(--line);
     border-radius:6px;
-    padding:10px 12px;
+    padding:10px 10px;
     flex:1;
     min-width:0;
     box-sizing:border-box;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
-  .mail-input::placeholder{ color:var(--silver); }
+  .mail-input::placeholder{ color:var(--silver); overflow:hidden; text-overflow:ellipsis; }
   .mail-input:focus-visible{ outline:2px solid var(--gold-soft); outline-offset:2px; }
   .copy-btn{
     font-family:'Noto Serif TC', serif;
@@ -439,6 +476,7 @@
   }
 
   @media (prefers-reduced-motion: reduce){
+    .die.rolling{ animation:none; }
     .die.rolling .die-glyph, .die.rolling .die-name{ animation:none; }
     .stars span{ animation:none; }
   }
@@ -451,8 +489,8 @@
 
 <header>
   <div class="eyebrow">默默 占星骰子</div>
-  <h1>擲下<em>天體</em>三骰</h1>
-  <p class="sub">行星、星座、宮位——三層命題交會之處，便是此刻的訊息。點一下「擲骰」，看看星空想對你說什麼。</p>
+  <h1>擲下<em>天體</em> 三骰</h1>
+  <p class="sub">行星、星座、宮位——三層命題交會之處，<br>便是此刻的訊息。<br>點一下「擲骰」，看看星空想對你說什麼。</p>
 </header>
 
 <div class="ritual">
@@ -469,27 +507,27 @@
 <div class="dice-row">
   <div class="die" id="die-planet">
     <div class="die-label">行星 · Planet</div>
-    <div class="die-glyph" id="glyph-planet">☉</div>
-    <div class="die-name" id="name-planet">太陽</div>
+    <div class="die-glyph" id="glyph-planet">☉︎</div>
+    <div class="die-name" id="name-planet">行星</div>
   </div>
   <div class="die" id="die-sign">
     <div class="die-label">星座 · Sign</div>
-    <div class="die-glyph" id="glyph-sign">♈</div>
-    <div class="die-name" id="name-sign">牡羊座</div>
+    <div class="die-glyph" id="glyph-sign">♈︎</div>
+    <div class="die-name" id="name-sign">星座</div>
   </div>
   <div class="die" id="die-house">
     <div class="die-label">宮位 · House</div>
     <div class="die-glyph" id="glyph-house">Ⅰ</div>
-    <div class="die-name" id="name-house">第一宮</div>
+    <div class="die-name" id="name-house">宮位</div>
   </div>
 </div>
 
 <div class="mail-row">
   <div class="mail-input-line">
-    <input type="email" id="mail-addr" class="mail-input" placeholder="輸入Email才能擲骰（解讀也會寄給自己）" required>
+    <input type="email" id="mail-addr" class="mail-input" placeholder="輸入email（必填）" required>
     <button id="copy-btn" class="copy-btn">複製內容</button>
   </div>
-  <p class="mail-hint" id="mail-hint">按下「擲骰」後，解讀結果將自動寄到這個Email</p>
+  <p class="mail-hint" id="mail-hint">按下「擲骰」後，解讀結果將自動寄到這個Email保存</p>
 </div>
 
 <button id="roll">擲　骰</button>
@@ -521,66 +559,62 @@
 
   // ---------- data ----------
   const planets = [
-    {name:"太陽", glyph:"☉",
+    {name:"太陽", glyph:"☉︎",
       trait:"自我意識的核心、獨特性與生命力的表達",
       verb:"想要活出真實的自己、想要被看見、想要自由地展現意念",
       domain:"你是誰、你想成就什麼，也牽動你與父親、配偶、兒子等重要男性的關係",
       keywords:"自我、自由意念、生命力、獨特性、個體性、創作、成就"},
-    {name:"月亮", glyph:"☽",
+    {name:"月亮", glyph:"☽︎",
       trait:"內在情感、潛意識反應與安全感需求",
       verb:"渴望被滋養、想要安頓真實的心情，也容易被直覺與防衛機制牽動",
       domain:"你的情緒安全感、習慣與居家狀態，也牽動你與母親、女兒等重要女性及家人的關係",
       keywords:"情感、潛意識、直覺、記憶、習慣、滋養、親密、居家、陰晴不定"},
-    {name:"水星", glyph:"☿",
+    {name:"水星", glyph:"☿︎",
       trait:"心智活動、語言與溝通交流的方式",
       verb:"想要把話說清楚、想要理解也想被理解，靠資訊與邏輯來定位自己",
       domain:"你如何學習、表達、傳遞訊息，也牽動你與兄弟姊妹、同學、近距離人際的互動",
       keywords:"溝通、語言、聽說讀寫、理性思維、學習、構思、交通、資訊"},
-    {name:"金星", glyph:"♀",
+    {name:"金星", glyph:"♀︎",
       trait:"價值判斷、美感與社交吸引力",
       verb:"想要靠近美好的事物、想要被欣賞，也願意妥協來換取和諧",
       domain:"你的人際關係、金錢品味與享受方式，也牽動你與姊妹、愛人、好友之間的情分",
       keywords:"喜好、價值觀、魅力、舒適、享受、調停、品味、金錢、奢華"},
-    {name:"火星", glyph:"♂",
+    {name:"火星", glyph:"♂︎",
       trait:"行動力、原始慾望與生存意志",
       verb:"想要爭取、想要捍衛、想要立刻有所行動，也容易衝動或對抗",
       domain:"你如何展現勇氣、競爭與身體活力，也牽動男性、軍人、運動員一類的角色",
       keywords:"行動力、熱情、慾望、野心、衝突、競爭、身體、犯罪、防禦"},
-    {name:"木星", glyph:"♃",
+    {name:"木星", glyph:"♃︎",
       trait:"擴張的信念系統與樂觀視野",
       verb:"想要變得更大、更自由、更有意義，也容易因樂觀而誇大或猶豫",
       domain:"你如何成長、求知、遠行，也牽動高等教育、海外經驗與你所信仰的道德觀",
       keywords:"樂觀、幸運、遠征、擴展、信念、旅行、豐盛、哲學、法律、宗教"},
-    {name:"土星", glyph:"♄",
+    {name:"土星", glyph:"♄︎",
       trait:"責任課題、現實限制與長期承諾",
       verb:"被要求扎實、被要求承擔，也常感到壓力、遲鈍或自我克制",
       domain:"你必須學會的紀律、邊界與長期累積的成果，也牽動權威、主管與年長者的課題",
       keywords:"傳統、責任、壓力、限制、收斂、結構、規範、權威、年老"},
-    {name:"天王星", glyph:"♅",
+    {name:"天王星", glyph:"♅︎",
       trait:"突破常規與覺醒的衝動",
       verb:"想要打破框架、想要自由，也常在意外與刺激中帶來轉折",
       domain:"你準備鬆動的舊規則，也牽動科技、發明、叛逆與覺醒者的特質",
       keywords:"變化、意外轉折、驚喜、刺激、怪異、突變、突發、打擊、前衛、原創、獨特、搞怪、覺醒、啟蒙、客觀、疏離、高科技、高等心智、體制外、另類、例外、超脫、優越、自由、解放、革命、排拒、脫軌、騷動、割除、混亂、流放、意外事件。人物：覺者、科技人、發明家、叛逆者、革命家、社工、天才、怪才"},
-    {name:"海王星", glyph:"♆",
+    {name:"海王星", glyph:"♆︎",
       trait:"夢境、慈悲與融合一切的渴望",
       verb:"想要溶解界線、想要奉獻與超越，也容易因模糊而迷惘或逃避",
       domain:"你的理想、信仰、藝術直覺與潛意識，也牽動犧牲者、藝術家、夢想家的角色",
       keywords:"慈悲、大愛、悲憫、同理心、寬恕、療癒、信仰、出世、無我、犧牲、昇華、神祕、謎團、合一、模糊、曖昧、潛伏、消融、救贖、敏感、夢想、幻想、奇幻、失落、嚮往、幻滅、迷幻、欺騙、上癮、受苦、逃避、迷惘、靈界、虛構、陰謀、超現實、幻境、夢境、電影、小說、藝術、攝影、潛意識、媒體、廣告、海洋、航海。人物：受害者、弱勢者、救世主、造物源頭、藝術家、導演、詩人、攝影師"},
-    {name:"冥王星", glyph:"♇",
+    {name:"冥王星", glyph:"♇︎",
       trait:"深層力量與蛻變的驅力",
       verb:"被迫面對、被迫放手又重新掌權，常牽涉執著與生存的慾望",
       domain:"你與權力、資源、生死課題之間必須經歷的轉化，也牽動掌權者、強人的特質",
-      keywords:"強大力量、大權、大勢、大能、資源、潛能、操控、執著、生存的慾望、深層力量、深層心靈、集體與個人的陰影、轉化力、淨化、爆發、禁忌、毀壞、虐待、侵害、偏執、強迫、精神疾病、業力、核能、資源回收、深層心理學、集體影響力、生死輪迴、地下組織。人物：掌權者、操控者、企業家、鉅子、頭號人物、狠角色、強人、大老闆、大佬、獨裁者"}
-  ];
-
-  // ---------- 補充資料庫(僅供解讀邏輯參考，不在介面上顯示為可選骰子) ----------
-  const lunarNodes = [
-    {name:"南月交點", glyph:"☋",
+      keywords:"強大力量、大權、大勢、大能、資源、潛能、操控、執著、生存的慾望、深層力量、深層心靈、集體與個人的陰影、轉化力、淨化、爆發、禁忌、毀壞、虐待、侵害、偏執、強迫、精神疾病、業力、核能、資源回收、深層心理學、集體影響力、生死輪迴、地下組織。人物：掌權者、操控者、企業家、鉅子、頭號人物、狠角色、強人、大老闆、大佬、獨裁者"},
+    {name:"南交點", glyph:"☋︎",
       trait:"過去、舊緣分與靈魂的天賦本能",
       verb:"讓你感到熟悉而安全，卻也容易使你執著、停滯不前",
       domain:"前世帶來的承襲與制約，以及你習慣性的付出與失去模式",
       keywords:"過去、舊緣分、熟悉的人事物、前世、承襲、制約、執著、付出"},
-    {name:"北月交點", glyph:"☊",
+    {name:"北交點", glyph:"☊︎",
       trait:"未來、新緣分與靈魂的發展方向",
       verb:"呼喚你去學習、去接受陌生卻是成長所需的經驗",
       domain:"你尚未熟練、卻是這一世該前往的新方向與演化課題",
@@ -588,29 +622,29 @@
   ];
 
   const signs = [
-    {name:"牡羊座", glyph:"♈", style:"直接、衝動、先做再說",
+    {name:"牡羊座", glyph:"♈︎", style:"直接、衝動、先做再說",
       keywords:"果決、衝動、熱情、求新、競爭、慾望、創始、啟動、新生、魄力、勇氣、大膽、自我、神勇、天真"},
-    {name:"金牛座", glyph:"♉", style:"緩慢、務實、需要安全感才肯動",
+    {name:"金牛座", glyph:"♉︎", style:"緩慢、務實、需要安全感才肯動",
       keywords:"舒適、優雅、安穩、維持、感受、感性、優質、毅力、固執、踏實、耐性、可靠、簡樸、保守、慵懶"},
-    {name:"雙子座", glyph:"♊", style:"靈活、好奇、用語言來理解世界",
+    {name:"雙子座", glyph:"♊︎", style:"靈活、好奇、用語言來理解世界",
       keywords:"機靈、敏銳、聰明、靈活、健談、心情、變動、善變、輕浮、三心兩意、矛盾、好玩、雙重性、多樣性"},
-    {name:"巨蟹座", glyph:"♋", style:"感性、保護性強、以情感為座標",
+    {name:"巨蟹座", glyph:"♋︎", style:"感性、保護性強、以情感為座標",
       keywords:"敏感、內向、柔弱、關懷、溫柔、體貼、懷舊、在乎、善解、親密、保護、防衛、母性、顧家、情緒化"},
-    {name:"獅子座", glyph:"♌", style:"鮮明、戲劇化、需要被肯定才安心",
+    {name:"獅子座", glyph:"♌︎", style:"鮮明、戲劇化、需要被肯定才安心",
       keywords:"熱誠、自尊、大方、大氣、氣派、風範、美麗、亮眼、高尚、驕傲、自豪、忠誠、溫暖、寬大、戲劇化、浮誇"},
-    {name:"處女座", glyph:"♍", style:"細緻、自我要求高、用分析來掌控不安",
+    {name:"處女座", glyph:"♍︎", style:"細緻、自我要求高、用分析來掌控不安",
       keywords:"純潔、仔細、謹慎、乖巧、效率、精緻、挑剔、整潔、規矩、健康、謙虛、潔癖、低調、刻苦、自律、服務性、批判性"},
-    {name:"天秤座", glyph:"♎", style:"權衡、講求公平、透過關係定位自己",
+    {name:"天秤座", glyph:"♎︎", style:"權衡、講求公平、透過關係定位自己",
       keywords:"公正性、和諧、優美、平衡、中庸、妥協、和平、理性、優雅、公益、公平、正確性、社交、互動感、猶豫、糾結"},
-    {name:"天蠍座", glyph:"♏", style:"深沉、不輕易示弱、一旦投入便極度認真",
+    {name:"天蠍座", glyph:"♏︎", style:"深沉、不輕易示弱、一旦投入便極度認真",
       keywords:"熱烈、極端、偏執、深層、防禦、獨佔、忠誠、情誼、危險性、掌控性、隱密、警覺性、犀利、直覺、激情、投入、頑強"},
-    {name:"射手座", glyph:"♐", style:"樂觀、嚮往遠方、討厭被細節綁住",
+    {name:"射手座", glyph:"♐︎", style:"樂觀、嚮往遠方、討厭被細節綁住",
       keywords:"自由、開闊、寬廣、隨性、冒險、拓展、探索、信心、快活、不羈、大方、正直、遠大、誇張、粗率、理想性、世界性、異國情調"},
-    {name:"魔羯座", glyph:"♑", style:"克制、長線思考、用成果證明自己",
+    {name:"魔羯座", glyph:"♑︎", style:"克制、長線思考、用成果證明自己",
       keywords:"克制、負責、建構、約束、謹慎、成熟、踏實、自律、原則、嚴格、嚴肅、壓抑、集中、現實性、悲觀、保守、野心"},
-    {name:"水瓶座", glyph:"♒", style:"疏離又前衛、忠於想法勝過忠於人情",
+    {name:"水瓶座", glyph:"♒︎", style:"疏離又前衛、忠於想法勝過忠於人情",
       keywords:"友善、前瞻性、解放、平等、冷淡、博愛、客觀、進步、灑脫、獨立、自主、冷漠、疏離、非典型、非正統、非常軌、我行我素、不近人情"},
-    {name:"雙魚座", glyph:"♓", style:"柔軟、邊界模糊、容易與外界共感",
+    {name:"雙魚座", glyph:"♓︎", style:"柔軟、邊界模糊、容易與外界共感",
       keywords:"敏感、靈性、矛盾、犧牲、夢幻、浪漫、虛弱、模糊、包容、接納、體諒、慈悲、脆弱、怠惰、迷糊、不確定、憧憬、迷戀、著迷、飄渺"}
   ];
 
@@ -887,8 +921,7 @@
     pushHistory(planet, sign, house);
   });
 
-  // show the initial 木星/獅子座/第十一宮 combo on load
-  document.getElementById('lookup-btn').click();
+  // 不在載入時自動顯示結果，保留骰子初始的「行星／星座／宮位」字樣，等使用者擲骰或查詢後才出現實際內容
 
   let rolling = false;
   document.getElementById('roll').addEventListener('click', async ()=>{
