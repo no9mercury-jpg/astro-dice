@@ -60,16 +60,16 @@
   }
   .eyebrow{
     font-family:'Cormorant Garamond', serif;
-    letter-spacing:0.35em;
+    letter-spacing:0.25em;
     text-transform:uppercase;
-    font-size:12px;
+    font-size:20px;
     color:var(--gold);
     margin-bottom:10px;
   }
   h1{
     font-family:'Cormorant Garamond', serif;
     font-weight:600;
-    font-size:clamp(34px,6vw,52px);
+    font-size:clamp(22px,4vw,32px);
     margin:0 0 6px;
     letter-spacing:0.04em;
   }
@@ -401,21 +401,6 @@
     display:flex;
     gap:10px;
   }
-  .mail-btn{
-    flex:1;
-    text-align:center;
-    font-family:'Cormorant Garamond', serif;
-    font-size:14px;
-    letter-spacing:0.08em;
-    color:var(--ink-deep);
-    background:linear-gradient(180deg, var(--gold-soft), var(--gold));
-    border-radius:6px;
-    padding:10px 14px;
-    border:none;
-    cursor:pointer;
-  }
-  .mail-btn:focus-visible{ outline:2px solid var(--gold-soft); outline-offset:2px; }
-  .mail-btn:disabled{ opacity:0.5; cursor:not-allowed; }
   .copy-btn{
     font-family:'Noto Serif TC', serif;
     font-size:13px;
@@ -477,7 +462,7 @@
     <li><span class="ritual-num">三</span><span class="ritual-text">想像骰子捧在手掌心，安靜片刻，在心中默念這個問題。</span></li>
     <li><span class="ritual-num">四</span><span class="ritual-text">念完之後，感覺對了，就輕輕地擲出骰子。</span></li>
   </ol>
-  <textarea id="question" class="question-box" placeholder="（選填）在這裡寫下你的問題……" rows="2"></textarea>
+  <textarea id="question" class="question-box" placeholder="（必填）在這裡寫下你的問題……" rows="2" required></textarea>
 </div>
 
 <div class="dice-row">
@@ -499,12 +484,11 @@
 </div>
 
 <div class="mail-row">
-  <input type="email" id="mail-addr" class="mail-input" placeholder="輸入你的Email，把這次解讀寄給自己">
+  <input type="email" id="mail-addr" class="mail-input" placeholder="輸入Email才能擲骰（解讀也會寄給自己）" required>
+  <p class="mail-hint" id="mail-hint">按下「擲骰」後，解讀結果將自動寄到這個Email</p>
   <div class="mail-actions">
-    <button id="mail-btn" class="mail-btn">✉ 寄出解讀</button>
     <button id="copy-btn" class="copy-btn">複製內容</button>
   </div>
-  <p class="mail-hint" id="mail-hint">填好Email後按「寄出解讀」，結果會直接寄到你的信箱</p>
 </div>
 
 <button id="roll">擲　骰</button>
@@ -527,7 +511,8 @@
 <div class="history" id="history"></div>
 
 <div class="legend">
-  本工具僅供占星練習與靈感啟發，並非命定預言。
+  本工具僅供占星練習與靈感啟發，並非命定預言。<br>
+  對解讀算法有任何疑問，歡迎透過 Instagram 私訊：@slience_tarot
 </div>
 
 <script>
@@ -737,11 +722,9 @@
     lines.push(`換句話說：${planet.domain}，正透過${sign.name}式的節奏，在${house.area}這個領域裡被攤開、被檢視，等你回應。`);
     lines.push('');
     lines.push('—— 來自 默默 占星骰子');
+    lines.push('對解讀算法有任何疑問，歡迎透過 Instagram 私訊：@slience_tarot');
     lastReadingText = lines.join('\n');
     lastSubject = `🔮 默默占星骰子｜${planet.name} · ${sign.name} · ${house.name}`;
-
-    // 重置寄送提示
-    document.getElementById('mail-hint').textContent = '填好Email後按「寄出解讀」，結果會直接寄到你的信箱';
   }
 
   let lastReadingText = '';
@@ -756,19 +739,12 @@
     emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
   }
 
-  document.getElementById('mail-btn').addEventListener('click', function(){
-    const emailEl = document.getElementById('mail-addr');
-    const email = emailEl.value.trim();
+  // 自動寄送解讀結果（擲骰完成後呼叫）
+  function autoSendReadingEmail(email){
     const hint = document.getElementById('mail-hint');
-    const btn = this;
 
-    if(!email || !email.includes('@') || !email.includes('.')){
-      hint.textContent = '請先輸入有效的Email地址';
-      emailEl.focus();
-      return;
-    }
     if(!lastReadingText){
-      hint.textContent = '請先擲骰或查詢一次結果，再寄送';
+      hint.textContent = '請先擲骰一次結果，再寄送';
       return;
     }
     if(!window.emailjs){
@@ -776,7 +752,6 @@
       return;
     }
 
-    btn.disabled = true;
     hint.textContent = '寄送中…';
 
     emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
@@ -785,12 +760,10 @@
       message: lastReadingText
     }).then(function(){
       hint.textContent = '已寄出！請到信箱（含垃圾信件夾）查看';
-      btn.disabled = false;
     }, function(err){
       hint.textContent = '寄送失敗，請改用「複製內容」貼到信箱';
-      btn.disabled = false;
     });
-  });
+  }
 
   document.getElementById('copy-btn').addEventListener('click', async function(){
     const hint = document.getElementById('mail-hint');
@@ -847,6 +820,25 @@
   let rolling = false;
   document.getElementById('roll').addEventListener('click', async ()=>{
     if(rolling) return;
+
+    const questionEl = document.getElementById('question');
+    const question = questionEl.value.trim();
+    const emailEl = document.getElementById('mail-addr');
+    const email = emailEl.value.trim();
+
+    if(!question){
+      document.getElementById('mail-hint').textContent = '請先寫下你的問題，才能擲骰';
+      questionEl.focus();
+      questionEl.scrollIntoView({ behavior:'smooth', block:'center' });
+      return;
+    }
+    if(!email || !email.includes('@') || !email.includes('.')){
+      document.getElementById('mail-hint').textContent = '請先填寫Email，才能擲骰';
+      emailEl.focus();
+      emailEl.scrollIntoView({ behavior:'smooth', block:'center' });
+      return;
+    }
+
     rolling = true;
     document.getElementById('reading').classList.remove('show');
 
@@ -862,6 +854,7 @@
 
     buildReading(finalPlanet, finalSign, finalHouse);
     pushHistory(finalPlanet, finalSign, finalHouse);
+    autoSendReadingEmail(email);
 
     // sync the lookup dropdowns to match the rolled result
     selPlanet.value = finalPlanet.name;
