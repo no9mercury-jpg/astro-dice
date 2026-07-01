@@ -62,7 +62,7 @@ exports.handler = async (event) => {
     const TEMPLATE_ID = process.env.EMAILJS_TEMPLATE_ID;
     const PUBLIC_KEY = process.env.EMAILJS_PUBLIC_KEY;
 
-    const accessURL = `https://dainty-kitten-96008e.netlify.app/?token=${token}&exp=${expiry.getTime()}`;
+    const accessURL = `https://slience-astro-dice.netlify.app/?token=${token}&exp=${expiry.getTime()}`;
 
     await fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
