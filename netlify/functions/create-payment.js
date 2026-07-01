@@ -17,8 +17,8 @@ exports.handler = async (event) => {
     const orderNo = 'ASTRO' + Date.now();
     const timeStamp = Math.floor(Date.now() / 1000);
 
-    const notifyURL = 'https://dainty-kitten-96008e.netlify.app/.netlify/functions/payment-notify';
-    const returnURL = 'https://dainty-kitten-96008e.netlify.app/success.html';
+    const notifyURL = 'https://slience-astro-dice.netlify.app/.netlify/functions/payment-notify';
+    const returnURL = 'https://slience-astro-dice.netlify.app/success.html';
 
     const tradeInfo = [
       `MerchantID=${MERCHANT_ID}`,
