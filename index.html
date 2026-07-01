@@ -4,6 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>默默 占星骰子</title>
+<script>
+(function(){
+  // 檢查URL是否帶有token（付款成功後的連結）
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  const exp = urlParams.get('exp');
+
+  if(token && exp){
+    // 新的付費連結：儲存到localStorage
+    const expTime = parseInt(exp);
+    if(Date.now() < expTime){
+      localStorage.setItem('astro_token', token);
+      localStorage.setItem('astro_exp', exp);
+      // 移除URL參數，保持網址乾淨
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }
+
+  // 檢查localStorage中是否有有效的token
+  const savedToken = localStorage.getItem('astro_token');
+  const savedExp = localStorage.getItem('astro_exp');
+
+  if(!savedToken || !savedExp || Date.now() > parseInt(savedExp)){
+    // 沒有有效token，跳轉付款頁
+    window.location.href = '/pay.html';
+  }
+})();
+</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Noto+Serif+TC:wght@400;600;700&display=swap');
 
